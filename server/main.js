@@ -1,5 +1,5 @@
-const Server = require("./server/socket.js");
-const ImageBuffer = require("./server/imagebuffer");
+const Server = require("./socket");
+const ImageBuffer = require("./imagebuffer");
 const { performance } = require("perf_hooks");
 const gm = require('gm');
 require("gm-base64");

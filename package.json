@@ -1,13 +1,13 @@
 {
-  "name": "gm-server",
+  "name": "text2image",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Converts text to image via websocket",
+  "main": "server/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node main.js | parcel client/index.html"
+    "start": "node server/main.js | parcel client/index.html"
   },
-  "author": "",
+  "author": "Sacha Guddoy",
   "license": "ISC",
   "dependencies": {
     "gm": "^1.23.1",
