@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <form id="getimage">
+        <input value="test" name="message" id="messageinput" type="text">
+        <input value=400 name="width" type="number">
+        <input value=500 name="height" type="number">
+        <input value=50 name="x" type="number">
+        <input value=50 name="y" type="number">
+        <button id="submit" type="submit">submit</button>
+
+        <img id="response" src="" alt="">
+    </form>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
+    <script>
+        let t = 0;
+        const ws = new WebSocket(`ws://localhost:8080`);
+        const image = document.getElementById(`response`);
+        console.log(ws);
+        ws.onopen = () => {
+            console.log("open")
+        };
+        ws.onerror = err => {
+            console.log("error", err)
+        };
+        ws.onmessage = res => {
+            console.log("message", res);
+            // const url = URL.createObjectURL(res.data);
+            image.onload = () => console.log(performance.now() - t);
+            image.src = "data:image/jpeg;charset=utf-8;base64," + res.data;
+
+        };
+
+        
+        const requestImage = () => {
+            const data = new FormData(form);
+            console.log(data.get(`message`));
+            t = performance.now();
+            ws.send(JSON.stringify({
+                message: data.get(`message`),
+                width: data.get(`width`),
+                height: data.get(`height`),
+                x: data.get(`x`),
+                y: data.get(`y`),
+            }));
+        }
+
+        const form = document.getElementById(`getimage`);
+        const messageInput = document.getElementById(`messageinput`);
+        const xinput = document.querySelectorAll(`input[name=x]`)[0];
+        const yinput = document.querySelectorAll(`input[name=y]`)[0];
+        form.addEventListener(`submit`, e => {
+            e.preventDefault();
+            requestImage();
+        });
+
+        const debounced = _.throttle(requestImage, 1);
+        messageInput.addEventListener(`input`, debounced);
+        xinput.addEventListener(`input`, debounced);
+        yinput.addEventListener(`input`, debounced);
+
+    </script>
+</body>
+</html>
