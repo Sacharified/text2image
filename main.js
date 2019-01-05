@@ -1,30 +1,30 @@
-const fs = require('fs');
+const Server = require("./server/socket.js");
+const ImageBuffer = require("./server/imagebuffer");
+const { performance } = require("perf_hooks");
 const gm = require('gm');
-const path = require("path");
-const { performance } = require('perf_hooks');
-const argv = require('minimist')(process.argv.slice(2));
 require("gm-base64");
-const WebSocket = require('ws');
 
-const wss = new WebSocket.Server({ port: 8080 });
-let buffer;
-gm(500, 500, "transparent")
-    .setFormat('png')
-    .toBuffer((err, buf) => {
-        if(err) {
-            console.error(err);
-            return;
-        }
+const socket = new Server({ onMessage });
+const image = new ImageBuffer();
 
-        buffer = buf;
-    });
-console.log(`Server started. Listening for Connections.`)
+function onMessage(data) {
+    console.log('Image requested', data);
+    const t = performance.now();
+    const { x, y, message } = data;
+    textToImage({ text: { x, y, message } })
+        .then(res => {
+            socket.sendMessage(res);
+            console.log(`Image created in ${((performance.now() - t) / 1000).toFixed(3)}s`);
+        });
+}
+
 const textToImage = opts => {
-    const { x, y, content } = opts.text;
+    const { x, y, message, fontSize = 40 } = opts.text;
 
     return new Promise((res, rej) => {
-        gm(buffer)
-            .drawText(x, y, content)
+        gm(image.buffer)
+            .fontSize(fontSize)
+            .drawText(x, y, message, "Center")
             .toBase64('bmp', function(err, base64){
                 if (err) {
                     console.log(err);
@@ -34,27 +34,3 @@ const textToImage = opts => {
             });
     });
 }
-
-
-wss.on('connection', function connection(ws) {
-    console.log(`connection established`)
-    ws.on('message', function incoming(message) {
-        console.log('received: %s', message);
-        const parsed = JSON.parse(message);
-        const { width, height, x, y } = parsed;
-        textToImage({
-            width,
-            height,
-            text: {
-                x,
-                y,
-                content: parsed.message
-            }
-        })
-            .then(res => {
-                console.log(`done`)
-                ws.send(res);
-            });
-        
-    });
-});
